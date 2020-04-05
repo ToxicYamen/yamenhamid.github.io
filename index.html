@@ -1,1 +1,738 @@
-toxic
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.0/sweetalert.min.js"></script>
+  <title>Yamen Hamid</title>
+
+  <link rel="stylesheet" typr="text/css" href="Style.css">
+          <link rel="stylesheet" typr="text/css" href="fontawesome.min.css">
+<script language="javascript" type="text/javascript" src="dateiname.js"></script>
+
+
+<script type="text/javascript">
+(function(){
+  var global = this;
+  var globalName = 'starField';
+  var numberOfStars = 100;
+
+  /* total depth of space ;)*/
+  var depthDimentsion = 2000;
+
+  /* % of space between browser and viewer.*/
+  var viewingDepth = 0.0001;
+
+  /* % of space moved in one step.*/
+  var forwardVelocity = 0.3;
+  var d = depthDimentsion*(viewingDepth/100);
+  var planeDepth = depthDimentsion - d;
+  var fv = planeDepth*(forwardVelocity/100);
+  var zMultiplier = (depthDimentsion)/d;
+  var starObjs, starHTML;
+  var posMod, sy, sx, windowCenterY, windowCenterX;
+  var scaleXAdjust, scaleYAdjust;
+  if((document.layers)&&(this.Layer)){
+	starHTML = [
+	'<layer id="stars','',
+	'" left="0" top="0" width="1" height="1"',
+	' bgColor="white"></layer>'];
+  }else{
+	starHTML = [
+	'<div id="stars','',
+	'" style="position:absolute;width:1px;overflow:',
+	'hidden;height:1px;background-color:white;',
+	'font-size:1px"></div>'];
+  }
+  function compatModeTest(obj){
+	if((document.compatMode)&&
+	   (document.compatMode.indexOf('CSS') != -1)&&
+	   (document.documentElement)){
+	  return document.documentElement;
+	}else if(document.body){
+	  return document.body;
+	}else{
+	  return obj;
+	}
+  }
+  function getWindowState(){
+	var global = this;
+	var readScroll = {scrollLeft:NaN,scrollTop:NaN};
+	var readSizeC = {clientWidth:NaN,clientHeight:NaN};
+	var readSizeI = {innerWidth:NaN,innerHeight:NaN};
+	var readScrollX = 'scrollLeft';
+	var readScrollY = 'scrollTop';
+	function getWidthI(){return readSizeI.innerWidth;}
+	function getWidthC(){return readSizeC.clientWidth|0;}
+	function getHeightI(){return readSizeI.innerHeight;}
+	function getHeightC(){return readSizeC.clientHeight|0;}
+	function getHeightSmart(){
+		return retSmaller(getHeightI(), getHeightC());
+	}
+	function getWidthSmart(){
+		return retSmaller(getWidthI(), getWidthC());
+	}
+	function setInnerWH(){
+	  theOne.getWidth = getWidthI;
+	  theOne.getHeight = getHeightI;
+	}
+	function retSmaller(inr, other){
+	  if(other > inr){
+		setInnerWH();
+		return inr;
+	  }else{
+		return other;
+	  }
+	}
+	var theOne = {
+	  getScrollX:function(){return readScroll[readScrollX]|0;},
+	  getScrollY:function(){return readScroll[readScrollY]|0;},
+	  getWidth:getWidthC,
+	  getHeight:getHeightC
+	};
+	function main(){return theOne;}
+	function rankObj(testObj){
+	  var dv,dhN;
+	  if(testObj&&(typeof testObj.clientWidth == 'number')&&
+		 (typeof testObj.clientHeight == 'number')){
+		if(((dv = global.innerHeight - testObj.clientHeight) >= 0)&&
+		   ((dh = global.innerWidth - testObj.clientWidth) >= 0)){
+		  if(dh == dv){
+			return 0;
+		  }else if((dh&&!dv)||(dv&&!dh)){
+			return (dh+dv);
+		  }
+		}
+	  }
+	  return NaN;
+	}
+	if((typeof global.innerHeight == 'number')&&
+	   (typeof global.innerWidth == 'number')){
+	  readSizeI = global;
+	  var bodyRank = rankObj(document.body);
+	  var rankDocEl = rankObj(document.documentElement);
+	  var selEl = null;
+	  if(!isNaN(bodyRank)){
+		if(!isNaN(rankDocEl)){
+		  if(bodyRank < rankDocEl){
+			selEl = document.body;
+		  }else if(bodyRank > rankDocEl){
+			selEl = document.documentElement;
+		  }else{
+			selEl = compatModeTest(document.body);
+		  }
+		}else{
+		  selEl = document.body;
+		}
+	  }else if(!isNaN(rankDocEl)){
+		selEl = document.documentElement;
+	  }
+	  if(selEl){
+		readSizeC = selEl
+		theOne.getWidth = getWidthSmart;
+		theOne.getHeight = getHeightSmart;
+	  }else{
+		setInnerWH();
+	  }
+	}else{
+	  readSizeC = compatModeTest(readSizeC);
+	}
+	if((typeof global.pageYOffset == 'number')&&
+	   (typeof global.pageXOffset == 'number')){
+	  readScroll = global;
+	  readScrollY = 'pageYOffset';
+	  readScrollX = 'pageXOffset';
+	}else{
+	  readScroll = compatModeTest(readScroll);
+	}
+	return (getWindowState = main)();
+  }
+  var windowState = getWindowState();
+  function readWindow(){
+	scaleYAdjust = (((windowCenterY =
+			(windowState.getHeight() >>1)) - 16)*
+						 zMultiplier);
+	scaleXAdjust = (((windowCenterX =
+			(windowState.getWidth() >> 1)) - 16)*
+						zMultiplier);
+	sy = windowCenterY + windowState.getScrollY();
+	sx = windowCenterX + windowState.getScrollX();
+  }
+  function getStyleObj(id){
+	var obj = null;
+	if(document.getElementById){
+	  obj = document.getElementById(id);
+	}else if(document.all){
+	  obj = document.all[id];
+	}else if(document.layers){
+	  obj = document.layers[id];
+	}
+	return ((typeof obj != 'undefined')&&
+		(typeof obj.style != 'undefined'))?
+					obj.style:obj;
+  }
+  function starObj(id, parent, prv){
+	var next,reset;
+	var divClip, div = getStyleObj("stars"+id);
+	var y,x,z,v,dx,dy,dm,dm2,px,py,widthPos,temp;
+	(reset = function(){
+	  px = Math.random()<0.5 ? +1 : -1;
+	  py = Math.random()<0.5 ? +1 : -1;
+	  y = ((Math.random()*Math.random()*
+		  scaleYAdjust)+windowCenterY);
+	  x = ((Math.random()*Math.random()*
+		  scaleXAdjust)+windowCenterX);
+	  widthPos = (x + zMultiplier);
+	  z = 0;
+	})();
+	z = Math.random()*planeDepth*0.8;
+	function step(){
+	  temp = x * (v = d/(depthDimentsion - z));
+	  dm = ((dm2 = ((widthPos * v)-temp)|0)>>1);
+	  dy = (y * v);
+	  dx = (temp);
+	}
+	if(div){
+	  if(!posMod){
+		posMod = (typeof div.top == 'string')?'px':0;
+	  }
+	  divClip =  ((typeof div.clip != 'undefined')&&
+			   (typeof div.clip != 'string'))?
+					   div.clip:div;
+	  this.position = function(){
+		step();
+		if(((z += fv) >= planeDepth)||
+		   ((dy+dm) > windowCenterY)||
+		  ((dx+dm) > windowCenterX)){
+		  reset();
+		  step();
+		  dm = 0;
+		}
+		div.top = ((sy+(py*dy)-dm)|0)+posMod;
+		div.left = ((sx+(px*dx)-dm)|0)+posMod;
+		divClip.width = (divClip.height = dm2+posMod);
+		next.position();
+	  };
+	}else{
+	  this.position = function(){return;};
+	}
+	if(++id < numberOfStars){
+	  next = new starObj(id, parent)
+	}else{
+	  next = parent
+	}
+  }
+  function init(){
+	if(!getStyleObj("stars"+(numberOfStars-1))){
+	  setTimeout(starField, 200);
+	}else{
+	  readWindow();
+	  starObjs = new starObj(0, init);
+	  init.act();
+	}
+  };
+  init.position = function(){return;}
+  init.act = function(){
+	readWindow();
+	starObjs.position();
+	setTimeout(init.act,50);
+  };
+  init.act.toString = function(){
+	return globalName+'.act()';
+  };
+  init.toString = function(){
+	while(global[globalName])globalName += globalName;
+	global[globalName] = this;
+	return globalName+'()';
+  };
+  for(var c = numberOfStars;c--;){
+	starHTML[1] = c;
+	document.write(starHTML.join(''));
+  }
+  setTimeout(init, 200);
+})();
+</script>
+
+<meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+       <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <script src="pace.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-bez@1.0.11/src/jquery.bez.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.2/TweenMax.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:500" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+</head>
+
+<!--HEADER----------------->
+  <body>
+<header>
+
+
+           <div id="logo">
+               <a href="#contact">
+<img src="img/logo.png" alt=logo>
+
+               </a>
+           </div>
+           <div class="black">
+           <img src="https://img.icons8.com/android/24/000000/menu.png"/></div>
+              <nav id="main-nav">
+                  <ul>
+                    <li><a href="#home">home</a></li>
+                    <li><a href="#about">about</a></li>
+                    <li><a href="#work">work</a></li>
+                    <li><a href="#login">Login</a></li>
+                    <li><a href="#register">Register</a></li>
+                    <li><a href="#contact">contact</a></li>
+
+                  </ul>
+              </nav>
+    </header>
+
+
+
+
+<!--HOME----------------->
+<script>
+var TxtRotate = function(el, toRotate, period) {
+  this.toRotate = toRotate;
+  this.el = el;
+  this.loopNum = 0;
+  this.period = parseInt(period, 10) || 2000;
+  this.txt = '';
+  this.tick();
+  this.isDeleting = false;
+};
+
+TxtRotate.prototype.tick = function() {
+  var i = this.loopNum % this.toRotate.length;
+  var fullTxt = this.toRotate[i];
+
+  if (this.isDeleting) {
+    this.txt = fullTxt.substring(0, this.txt.length - 1);
+  } else {
+    this.txt = fullTxt.substring(0, this.txt.length + 1);
+  }
+
+  this.el.innerHTML = '<span class="wrap">'+this.txt+'</span>';
+
+  var that = this;
+  var delta = 300 - Math.random() * 100;
+
+  if (this.isDeleting) { delta /= 2; }
+
+  if (!this.isDeleting && this.txt === fullTxt) {
+    delta = this.period;
+    this.isDeleting = true;
+  } else if (this.isDeleting && this.txt === '') {
+    this.isDeleting = false;
+    this.loopNum++;
+    delta = 500;
+  }
+
+  setTimeout(function() {
+    that.tick();
+  }, delta);
+};
+
+window.onload = function() {
+  var elements = document.getElementsByClassName('txt-rotate');
+  for (var i=0; i<elements.length; i++) {
+    var toRotate = elements[i].getAttribute('data-rotate');
+    var period = elements[i].getAttribute('data-period');
+    if (toRotate) {
+      new TxtRotate(elements[i], JSON.parse(toRotate), period);
+    }
+  }
+  // INJECT CSS
+  var css = document.createElement("style");
+  css.type = "text/css";
+  css.innerHTML = ".txt-rotate > .wrap { border-right: 0.08em solid #c7c7c7 }";
+  document.body.appendChild(css);
+};
+</script>
+<canvas id="canvas" width="400" height="400"
+style="background-color:transparent;">
+</canvas>
+<style>
+  canvas{
+  width:150px;
+    margin:0px 0px 0 0px;
+  margin-top:40px;
+    display:none;}
+
+    </style>
+   <div id="canvas" >
+<script>
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var radius = canvas.height / 2;
+ctx.translate(radius, radius);
+radius = radius * 0.90
+setInterval(drawClock, 1000);
+
+function drawClock() {
+  drawFace(ctx, radius);
+  drawNumbers(ctx, radius);
+  drawTime(ctx, radius);
+}
+
+function drawFace(ctx, radius) {
+  var grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, 2*Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  grad = ctx.createRadialGradient(0,0,radius*0.95, 0,0,radius*1.05);
+  grad.addColorStop(0, '#333');
+  grad.addColorStop(0.5, 'white');
+  grad.addColorStop(1, '#333');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = radius*0.1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
+  ctx.fillStyle = '#333';
+  ctx.fill();
+}
+
+function drawNumbers(ctx, radius) {
+  var ang;
+  var num;
+  ctx.font = radius*0.15 + "px arial";
+  ctx.textBaseline="middle";
+  ctx.textAlign="center";
+  for(num = 1; num < 13; num++){
+	ang = num * Math.PI / 6;
+	ctx.rotate(ang);
+	ctx.translate(0, -radius*0.85);
+	ctx.rotate(-ang);
+	ctx.fillText(num.toString(), 0, 0);
+	ctx.rotate(ang);
+	ctx.translate(0, radius*0.85);
+	ctx.rotate(-ang);
+  }
+}
+
+function drawTime(ctx, radius){
+	var now = new Date();
+	var hour = now.getHours();
+	var minute = now.getMinutes();
+	var second = now.getSeconds();
+	//hour
+	hour=hour%12;
+	hour=(hour*Math.PI/6)+
+	(minute*Math.PI/(6*60))+
+	(second*Math.PI/(360*60));
+	drawHand(ctx, hour, radius*0.5, radius*0.07);
+	//minute
+	minute=(minute*Math.PI/30)+(second*Math.PI/(30*60));
+	drawHand(ctx, minute, radius*0.8, radius*0.07);
+	// second
+	second=(second*Math.PI/30);
+	drawHand(ctx, second, radius*0.9, radius*0.02);
+}
+
+function drawHand(ctx, pos, length, width) {
+	ctx.beginPath();
+	ctx.lineWidth = width;
+	ctx.lineCap = "round";
+	ctx.moveTo(0,0);
+	ctx.rotate(pos);
+	ctx.lineTo(0, -length);
+	ctx.stroke();
+	ctx.rotate(-pos);
+}
+</script>
+    </div>
+
+<div class="bg"></div>
+
+<div class="bg bg2"></div>
+
+<div class="bg bg3"></div>
+<div class="content">
+
+</div>
+<style>
+	html {
+		height:100%;
+	}
+
+	body {
+		margin:0;
+	}
+
+   .bg{
+	   animation: slide 3s ease-in-out infinite alternate;
+	   opacity: .5;
+	   position: fixed;
+	   top: 0;
+	   left: -50%;
+	   right: -50%;
+	   bottom: 0;
+	   z-index: -2;
+  	 background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(4,4,125,1) 46%, rgba(0,212,255,1) 79%);
+   .bg2{
+	   animation-duration: 4s;
+	   animation-direction: alternate-reverse;
+   }
+   .bg3{
+	   animation-duration: 5s;
+	   animation-direction: alternate-reverse;
+   }
+	h1,h2,h3,h4,#about p,div,marquee{
+		font-family:monospace;
+	}
+  marquee{font-size:80px}
+	.content {
+		background-color:transparent;
+		border-radius:.25em;
+		box-shadow:0 0 .25em transparent;
+		box-sizing:border-box;
+		left:50%;
+		padding:10vmin;
+		position:fixed;
+		text-align:center;
+		top:50%;
+      transform:translate(-50%, -50%);}
+
+#about:p{font-size:30px;}
+
+	@keyframes slide {
+		0% {
+			transform:translateX(-25%);
+		}
+		100% {
+			transform:translateX(25%);
+		}
+	}
+  <canvas id="canvas" width="400" height="400"
+style="background-color:#333">
+</canvas>
+</style>
+
+  <section id="home">
+     <br>
+       <link href="https://fonts.googleapis.com/css?family=Raleway:200,100,400" rel="stylesheet" type="text/css" />
+<h1>coding
+  <span
+     class="txt-rotate"
+     data-period="2000"
+     data-rotate='[ "is cool.", "is the best.", "gamer.", "is prety.", " is funny!" ]'></span>
+</h1>
+       <h2>learn how to code with
+  <span
+     class="txt-rotate"
+     data-period="2000"
+     data-rotate='[ "html.", "js", "css.", "php.", " and more" ]'></span>
+</h2>
+             <a href="#about">
+               <img src="img/pfeil.png" alt="yamen">
+
+       </a>
+  </section>
+      <marquee style="background:linear-gradient(90deg,#03a9f4,#f441a5,#ffeb3b,#03a9f4);
+	transition-property:background;
+	background-size:100%;
+	background-clip:text;
+	-webkit-background-clip:text;
+	color:transparent;
+	font-size:70px;
+	transition:0.9s;
+
+}
+
+h4{animation:animate 8s infinite;}
+
+@keyframes animate{
+	0%{
+
+	}
+	100%{
+
+	}
+-webkit-background-clip:text;margin-top:5px;margin-top:10px;">Welcome to my Website</marquee>
+		<script>
+	(".tab li").click(function () {
+		$(".tabli").removeClass('active');
+		$(this).addClass('active');
+		var num = $(this).index();
+		$('.tab_child section').hide()
+		$('.tab_child section').eq(num).fadeIn();
+	})}}}}}}
+
+  </script>
+
+
+
+<!--About----------------->
+
+<section id="about">
+<h3>About
+<span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ "me", "css", "programing", "Html", "js" ]'></span>
+</h3>
+<a href="#contact">
+  <img src='img/avatar.png' alt="avatar"></a>
+   <h4>ToxicYamen</h4>
+  <p>Hallo<span
+     class="txt-rotate"
+     data-period="2000"
+     data-rotate='[ " iam yamen can i help you?", " i can help you? ", " hi iam Yamen.", " are you fine?", " do you want help." ]'></span>
+
+
+  </div>
+  < <register id="register">
+   <div class="container py-5">
+	<div class="row">
+	  <div class="col-md-12">
+
+		<div class="row">
+		  <div class="col-md-6 mx-auto">
+			<div class="card rounded-0">
+			  <div class="card-header">
+				<h3 class="mb-0"><h3>Register<span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ " to be a member", " to be a member", " to be a member", " to be a member", " to be a member" ]'></span></h3>
+			  </div>
+			  <div class="card-body">
+				<form class="form" role="form" autocomplete="off" id="formLogin" novalidate="" method="POST">
+				  <div class="form-group">
+					<label for="uname1" >Email</label>
+					<input type="text"placeholder="example@gmail.com" class="form-control form-control-lg rounded-0" name="uname1" id="uname1" required="">
+					<div class="invalid-feedback"></div>
+				  </div>
+				  <div class="form-group">
+					<label>Password</label>
+					<input type="password"placeholder="••••••••••••••••••••••••••••••••••" class="form-control form-control-lg rounded-0" id="pwd1" required="" autocomplete="new-password">
+	<label>Repeat Password</label>
+					<input type="password"placeholder="••••••••••••••••••••••••••••••••••" class="form-control form-control-lg rounded-0" id="pwd1" required="" autocomplete="new-password">
+					<div class="invalid-feedback"></div>
+				  </div>
+				  <div>
+
+
+
+
+				  <button class="btn btn-primary" type="button" >
+				<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"><div>Register<span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ " hier", " hier", " hier", " hier", " hier" ]'></span></div></span>
+
+				</button>
+
+				 </form>
+			  </div>
+
+
+
+          <!------Login------>
+
+          <div id="login">
+    <style> /* Full-width input fields */ input[type=text], input[type=password]
+     { width: 100%; padding: 12px 20px; margin: 8px 0; display: inline-block; border: 2px solid rgba(88,88,88,.58); box-sizing: border-box; } /* Set a style for all buttons */ button { background-color: #48d1cc; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; width: 100%; } .cancelbtn { width: auto; padding: 10px 18px; background-color: #4682b4; } /* Center the image and position the close button */ .imgcontainer { text-align: center; margin: 24px 0 12px 0; position: relative; } img.avatar { width: 40%; border-radius: 50%; } .container { padding: 16px; } span.psw { float: right; padding-top: 16px; } /* The Modal (background) */ .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 1000%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4); padding-top: 60px; } .modal-content { background-color: #fefefe; margin: 5% auto 15% auto; border: 1px solid #888; width: 80%; } /* The Close Button (x) */ .close { position: absolute; right: 25px; top: 0; color: black; font-size: 35px; font-weight: bold; } .close:hover, .close:focus { color: red; cursor: pointer; } /* Add Zoom Animation */ .animate { -webkit-animation: animatezoom 0.6s; animation: animatezoom 0.6s } @-webkit-keyframes animatezoom { from {-webkit-transform: scale(0)} to {-webkit-transform: scale(1)} } @keyframes animatezoom { from {transform: scale(0)} to {transform: scale(1)} } /* Change styles for span and cancel button on extra small screens */ @media screen and(max-width: 300px){ span.psw { display: block; float: none; } .cancelbtn { width: 100%; } } </style> <body> <h3>Login<span
+       class="txt-rotate"
+       data-period="2000"
+          data-rotate='[ " hier", " hier", " hier", " hier", " hier" ]'></span></h3><hr>
+           <button onclick="document. getElementById('id01') .style.display='block'" style="width:50%;margin-bottom: 200px;height: 40px;">Login </button> <div id="id01" class="modal"> <form class="modal-content animate" action="action_page.php"> <div class="imgcontainer"> <span onclick="document .getElementById('id01') .style.display='none'" class="close" title="Close Modal"> &times;</span> <img src="img/avatar32.png" alt="Avatar" class="avatar"> </div> <div class="container"> <label><b>Username</b></label> <input type="text" placeholder= "Enter Username" name="uname" required> <label><b>Password</b></label> <input type="password" placeholder= "Enter Password" name="psw" required> <button type="submit">Login</button> <input type="checkbox" checked="checked"> Remember me </div> <div class="container" style="background-color:#f1f1f1"> <button type="button" onclick="document.getElementById ('id01').style. display='none'" class="cancelbtn"> Cancel</button> <span class="psw">Forgot <a href="#">password? </a></span> </div> </form> </div> <script> // Get the modal var modal = document.getElementById ('id01'); // When the user clicks anywhere outside of the modal, close it window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } } </script></div>
+
+
+
+
+
+
+
+
+
+
+<!------work----------->
+
+
+
+<section id="work">
+<a href="work"alt="contacts"></a><h3>work<span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ " with me", " with me", " with me", " with me", " with me" ]'></span></h3>
+
+<div id="projects">
+<ul>
+  <li><a href=https://instagram.com/shisuikun5?igshid=15g4t1iipvnbv> <img src="img/uBaliez.png" alt="Projekt_01"></a></li>
+  <li><a href="https://twitter.com/Yamen662006"> <img src="img/Balieze.png" alt="Projekt_01"></a></li>
+  <li><a href=https://www.facebook.com/yamenhamid.hamid> <img src= "img/Balieez.png" alt="Projekt_01"></a></li>
+  <li><a href=img/King.mov> <img src= "img/King.png" alt="Projekt_01"></a></li>
+    <li><a href=https://www.snapchat.com/add/yamen662006Adde> <img src= "img/avatar2.png" alt="Projekt_01"></a></li>
+</ul>
+</div>
+</section>
+
+<!--Contect----------------->
+
+<section id="contact">
+<a href="contact"alt="contacts"></a><h3>Contect<span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ " me", " me", " me", " me", " me" ]'></span></h3>
+<hr/>
+<form action="yamen.php"method="post">
+<input class="input_text" type="email"name="email"tabindex="1"/ placeholder="E-mail"/><br/>
+<input class="input_text" type="yamen"name="name" tabindex="2"/ placeholder=Firstname&Lastname><br/>
+<textarea class="input_text" tabindex="3"/ placeholder="Message"name="message"></textarea><br/>
+<input class="button" type="submit" name="submit" value="submit">
+  </form>
+    </section>
+
+
+<!--FOOTER----------------->
+ <footer>
+    <audio id="myAudio" src="https://arvndvv.github.io/game/battleship/music/intro.mp3" preload="auto"></audio>
+	  <audio id="bgm" src="https://arvndvv.github.io/game/battleship/music/bgm.mp3" preload="auto"></audio>
+<div id="map"style='height:100%;width:100%;'><iframe width="1000px;" height="300" src=https://maps.google.de/maps?hl=de&q=%20Bachgasse42%20Wien&t=&z=14&ie=utf8&iwloc=b&output=embed frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style='height:500px;width:100%;'></iframe><p style="text-align:right; margin:0px; padding-top:-10px; line-height:10px;font-size:20px;margin-top: -25px;"><a href="http://www.checkpoll.de/google-maps-generator/" style="font-size:10px;" target="_blank">Google Maps Generator</a> by <a href="https://www.on-projects.de/" rel="nofollow" style="font-size:10px;" title="" target="_blank">on-projects</a></p></div>
+  <br>
+
+
+ <nav>
+		 <ul>
+     <li>
+				 <a href="https://m.youtube.com/channel/UCvnq-qxzYsHHCpxul82vfcw"><i class="fab fa-youtube"></i></a>
+			 </li>
+			 &nbsp;
+
+			 <li>
+				 <a href="https://www.facebook.com/yamenhamid.hamid"><i class="fab fa-facebook-f"></i></a>
+			 </li>
+			 &nbsp;
+
+			 <li>
+				 <a href=https://twitter.com/Yamen662006><i class="fab fa-twitter"></i></a>
+			 </li>
+			 &nbsp;
+
+			 <li>
+				 <a href="https://www.instagram.com/einfachyamen/
+"><i class="fab fa-instagram"></i></a>
+			 </li>
+
+		 </ul>
+	 </nav>
+<p>&copy;2020 <span
+     class="txt-rotate"
+     data-period="2000"
+        data-rotate='[ " Powered by Yamen", "Powered by Yamen", "Powered by Yamen", "Powered by Yamen", "Powered by Yamen" ]'></span></p>
+
+</footer>
+<script language="javascript" type="text/javascript" src="mobile.js"></script>
+</body>
+</html>
